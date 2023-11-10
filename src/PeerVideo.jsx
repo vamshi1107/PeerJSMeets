@@ -16,7 +16,7 @@ export default function Peervideo() {
 
     const params = new URL(window.location.href).searchParams;
     
-    const socket = io('https://sock-js.vercel.app',{
+    const socket = io('https://dtt-meets-backend.adaptable.app/',{
         transports:['websocket', 'polling']
     })
 

@@ -16,7 +16,9 @@ export default function Peervideo() {
 
     const params = new URL(window.location.href).searchParams;
     
-    const socket = io('https://sock-js.vercel.app')
+    const socket = io('https://sock-js.vercel.app',{
+        transports:['websocket', 'polling']
+    })
 
     useEffect(() => {
 

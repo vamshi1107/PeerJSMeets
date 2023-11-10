@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './PeerVideo.css'
 import Peer from 'peerjs'
-
+import { useParams } from 'react-router-dom'
+import { io } from 'socket.io-client'
 export default function Peervideo() {
 
 
@@ -13,14 +14,53 @@ export default function Peervideo() {
     const currentPeer = useRef(null)
     const [remotePeerIdValue, setRemotePeerIdValue] = useState('');
 
+    const params = new URL(window.location.href).searchParams;
+    
+    const socket = io('https://sock-js-190030089s-projects.vercel.app:1230')
 
     useEffect(() => {
-        var peer = new Peer();
+
+
+        let peer = new Peer();
+        console.log("id params",params.get('id'))
+        let meetId=params.get('id');
+
+        
+
         
         peer.on('open', (id)=>{
             console.log(id)
             setPeerId(id)
+            if(params.get('id')!=undefined){
+                
+                socket.emit('join',{roomid:meetId,peerid:id})
+            }
+            socket.on('userJoined',(peeId)=>{
+                
+                
+                console.log("Heelo ",peeId," jj ",id)
+                if(peeId.data!=undefined && peeId.data!=id &&peeId.result<3){
+                    setinitialView('startCall')
+                    var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                    console.log("hello userJoined")
+                    getUserMedia({ video: true, audio: true},(mediaStream)=>{
+                        outgoingVideo.current.srcObject = mediaStream;
+                        setinitialView('startCall')
+                        const call = currentPeer.current.call(peeId.data,mediaStream)
+    
+                        call.on('stream',(remoteStream)=>{
+                            incommingVideo.current.srcObject = remoteStream;
+                        })
+    
+                    })
+                }
+            })
         })
+
+        
+        
+
+        
         
 
         peer.on('call',(call)=>{
@@ -30,13 +70,11 @@ export default function Peervideo() {
             setinitialView('startCall')
             getUserMedia({ video: true, audio: true }, (mediaStream) => {
                 outgoingVideo.current.srcObject = mediaStream;
-                outgoingVideo.current.play();
                 call.answer(mediaStream)
                 console.log("call meta data",call.metadata," /n ",call)
                 setRemotePeerIdValue(call.peer)
                 call.on('stream',(remoteStream)=>{
                     incommingVideo.current.srcObject = remoteStream
-                    incommingVideo.current.play();
                 })
             });
 
@@ -55,13 +93,11 @@ export default function Peervideo() {
         console.log("hello")
         getUserMedia({ video: true, audio: true},(mediaStream)=>{
             outgoingVideo.current.srcObject = mediaStream;
-            outgoingVideo.current.play();
             
             const call = currentPeer.current.call(remotePeerIdValue,mediaStream)
 
             call.on('stream',(remoteStream)=>{
                 incommingVideo.current.srcObject = remoteStream;
-                incommingVideo.current.play();
             })
 
         })
@@ -76,7 +112,8 @@ export default function Peervideo() {
         <>
             {initalView == 'initial' ? <div className=''>
                 <div className='MeetHeading'>
-                    <h1>Welcome to ATT Meets</h1>
+                    <h1>Welcome to ATT Meets</h1><br></br>
+                    <h2>Your ID is  {peerId}</h2>
                 </div>
 
                 <div className='contianerMain'><p>Have a Meeting ID Use it to enter a meet</p>
@@ -89,14 +126,14 @@ export default function Peervideo() {
                     <div style={{ display: "flex", justifyContent: "center", marginTop: "80px", marginBottom: "24px" }}> Welcome to Call Meet Id<b style={{marginLeft: "4px"}}>{remotePeerIdValue}</b></div>
                     <div style={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
                         <div className='incomingVideo'>
-                            <video className='videoContainer' ref={incommingVideo}></video>
+                            <video className='videoContainer' autoPlay ref={incommingVideo}></video>
                         </div>
 
 
                     </div>
                     <div >
                         <div className='outgoingVideo'>
-                            <video className="videoContainer" ref={outgoingVideo}></video>
+                            <video className="videoContainer" autoPlay ref={outgoingVideo}></video>
                         </div>
                     </div>
 

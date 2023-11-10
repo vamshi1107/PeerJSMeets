@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import PeerVideo from "./PeerVideo.js";
+import PeerVideo from "./PeerVideo.jsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 

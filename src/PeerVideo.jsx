@@ -133,7 +133,7 @@ export default function Peervideo() {
                     </div>
                     <div >
                         <div className='outgoingVideo'>
-                            <video className="videoContainer" autoPlay ref={outgoingVideo}></video>
+                            <video controls muted className="videoContainer" autoPlay ref={outgoingVideo}></video>
                         </div>
                     </div>
 

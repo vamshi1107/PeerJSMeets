@@ -23,10 +23,7 @@ export default function Peervideo() {
     useEffect(() => {
 
 
-        let peer = new Peer({
-		host: "9000-peers-peerjsserver-6n1d9keqivz.ws-us106.gitpod.io/",
-		path: "/",
-	});
+        let peer = new Peer();
         console.log("id params",params.get('id'))
         let meetId=params.get('id');
 

@@ -24,7 +24,7 @@ export default function Peervideo() {
 
 
         let peer = new Peer({
-		host: "https://9000-peers-peerjsserver-6n1d9keqivz.ws-us106.gitpod.io/",
+		host: "9000-peers-peerjsserver-6n1d9keqivz.ws-us106.gitpod.io/",
 		port: 9000,
 		path: "/",
 	});

@@ -168,8 +168,8 @@ export default function Peervideo() {
         <div
           id="incoming"
           className={` ${
-            !hasRemote() ? styles.hidden : styles.MainVideo
-          } radius-lg overflow-hidden `}
+            !hasRemote() ? styles.hidden : `${styles.MainVideo} `
+          } radius-lg overflow-hidden border border-cobalt-600 bg-white`}
         >
           {hasVideo(incommingVideo) ? (
             <video
@@ -187,7 +187,7 @@ export default function Peervideo() {
           id="outgoingMain"
           className={` ${
             hasRemote() ? styles.hidden : styles.MainVideo
-          } radius-lg overflow-hidden `}
+          } radius-lg overflow-hidden border border-cobalt-600 bg-white`}
         >
           <video
             height={"100%"}
@@ -216,12 +216,14 @@ export default function Peervideo() {
             ></video>
           </div>
         </div>
-        <div className="width-full flex justify-center pad-t-sm">
+        <div
+          className={` ${styles.controls} width-full flex justify-center pad-t-sm absolute z5`}
+        >
           <IconButton
             default={!mediaState?.audio}
             icon={audioIcon}
             iconSeleted={audioIconSelected}
-            className={"mar-r-md"}
+            className={`mar-r-md ${styles.controlsButton}`}
             onSelected={(audioState) => {
               setMediaState({ ...mediaState, audio: audioState });
             }}
@@ -230,7 +232,7 @@ export default function Peervideo() {
             default={!mediaState?.video}
             icon={videoIcon}
             iconSeleted={videoIconSelected}
-            className={""}
+            className={`${styles.controlsButton}`}
             onSelected={(videoState) => {
               setMediaState({ ...mediaState, video: videoState });
             }}

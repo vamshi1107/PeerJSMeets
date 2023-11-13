@@ -13,9 +13,12 @@
   border-radius: 50%;
 }
 
+.iconButtonHover {
+  background-color: #ffffff47;
+}
+
 .iconButtonHover:hover {
   background-color: #ffffffbd;
-  border: none;
 }
 
 .iconContainer {

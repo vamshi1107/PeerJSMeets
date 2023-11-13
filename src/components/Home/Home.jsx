@@ -5,7 +5,6 @@ import {
   videoIcon,
   videoIconSelected,
 } from "../../constants";
-import Navbar from "../../Navbar";
 import styles from "./Home.module.css";
 import { PeerContext } from "../../Context";
 
@@ -65,7 +64,7 @@ export default function Home(props) {
               icon={videoIcon}
               iconSeleted={videoIconSelected}
               className={""}
-              onSelected={(videoState) => {
+                            onSelected={(videoState) => {
                 setMediaState({ ...mediaState, video: videoState });
               }}
             ></IconButton>
@@ -81,8 +80,8 @@ export default function Home(props) {
   );
 }
 
-const IconButton = (props) => {
-  const [selected, setSelected] = useState(false);
+export const IconButton = (props) => {
+  const [selected, setSelected] = useState(props?.default ?? false);
 
   const onButtonSlected = (e) => {
     const selectState = !selected;

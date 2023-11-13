@@ -1,9 +1,23 @@
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Peer from "peerjs";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { PeerContext } from "../../Context";
 import styles from "./PeerVideo.module.css";
+import { IconButton } from "../Home/Home";
+import {
+  audioIcon,
+  audioIconSelected,
+  videoIcon,
+  videoIconSelected,
+} from "../../constants";
 
 export default function Peervideo() {
   const [peerId, setPeerId] = useState(null);
@@ -21,6 +35,8 @@ export default function Peervideo() {
 
   const params = new URL(window.location.href).searchParams;
 
+  const callRef = useRef(null);
+
   const socket = io("https://dtt-meets-backend.adaptable.app/", {
     transports: ["websocket", "polling"],
   });
@@ -31,37 +47,43 @@ export default function Peervideo() {
     return context?.data?.mediaState;
   }, [context?.data?.mediaState]);
 
+  const setMediaState = useCallback(
+    (mediaState) => context?.setData({ ...context?.data, mediaState }),
+    [context?.data]
+  );
+
   useEffect(() => {
     if (mediaState?.audio || mediaState.video) {
       navigator.getUserMedia(mediaState, (stream) => {
         outgoingVideoRef.current.srcObject = stream;
         outgoingMainVideoRef.current.srcObject = stream;
       });
+    } else {
+      outgoingVideoRef.current.srcObject = null;
+      outgoingMainVideoRef.current.srcObject = null;
     }
   }, [mediaState]);
 
   useEffect(() => {
     let peer = new Peer();
-    console.log("id params", params.get("id"));
     let meetId = params.get("id");
 
     peer.on("open", (id) => {
-      console.log(id);
       setPeerId(id);
+
       if (params.get("id") != undefined) {
         socket.emit("join", { roomid: meetId, peerid: id });
       }
+
       socket.on("userJoined", (peeId) => {
-        console.log("Heelo ", peeId, " jj ", id);
         if (peeId.data != undefined && peeId.data != id && peeId.result < 3) {
           var getUserMedia =
             navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia;
-          console.log("hello userJoined");
-          getUserMedia({ video: true, audio: true }, (mediaStream) => {
-            outgoingVideoRef.current.srcObject = mediaStream;
+          getUserMedia(mediaState, (mediaStream) => {
             const call = currentPeer.current.call(peeId.data, mediaStream);
+            callRef.current = call;
             setRemotePeerIdValue(call.peer);
             valueRef.current = call.peer;
             call.on("stream", (remoteStream) => {
@@ -77,11 +99,9 @@ export default function Peervideo() {
         navigator.getUserMedia ||
         navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia;
-
-      getUserMedia({ video: true, audio: true }, (mediaStream) => {
-        outgoingVideoRef.current.srcObject = mediaStream;
+      callRef.current = call;
+      getUserMedia(mediaState, (mediaStream) => {
         call.answer(mediaStream);
-        console.log("call meta data", call.metadata, " /n ", call);
         setRemotePeerIdValue(call.peer);
         valueRef.current = call.peer;
         call.on("stream", (remoteStream) => {
@@ -93,6 +113,28 @@ export default function Peervideo() {
     currentPeer.current = peer;
   }, []);
 
+  useEffect(() => {
+    if (callRef.current) {
+      let callSate = callRef.current;
+      getUserMedia(mediaState, (stream) => {
+        callSate.peerConnection.getSenders().forEach((sender) => {
+          if (
+            sender.track.kind === "audio" &&
+            stream.getAudioTracks().length > 0
+          ) {
+            sender.replaceTrack(stream.getAudioTracks()[0]);
+          }
+          if (
+            sender.track.kind === "video" &&
+            stream.getVideoTracks().length > 0
+          ) {
+            sender.replaceTrack(stream.getVideoTracks()[0]);
+          }
+        });
+      });
+    }
+  }, [mediaState]);
+
   const hasRemote = () => {
     return valueRef.current.length > 0;
   };
@@ -100,7 +142,7 @@ export default function Peervideo() {
   return (
     <>
       <div
-        className={`${styles.MainContainer} flex justify-center pad-md bg-gray-300`}
+        className={`${styles.MainContainer} flex flex-column justify-center pad-md bg-gray-300`}
       >
         <div
           id="incoming"
@@ -111,8 +153,8 @@ export default function Peervideo() {
           <video
             height={"100%"}
             width={"100%"}
-            muted
             autoPlay
+            muted
             className="box-shadow4"
             ref={incommingVideo}
           ></video>
@@ -132,12 +174,13 @@ export default function Peervideo() {
             ref={outgoingMainVideoRef}
           ></video>
         </div>
+
         <div>
           <div
             id="outgoing"
             className={`${
               !hasRemote() ? styles.hidden : styles.outgoing
-            } mar-sm radius-lg overflow-hidden `}
+            } mar-sm radius-lg overflow-hidden border border-cobalt-600 bg-white`}
           >
             <video
               height={"100%"}
@@ -148,6 +191,26 @@ export default function Peervideo() {
               ref={outgoingVideoRef}
             ></video>
           </div>
+        </div>
+        <div className="width-full flex justify-center pad-t-sm">
+          <IconButton
+            default={!mediaState?.audio}
+            icon={audioIcon}
+            iconSeleted={audioIconSelected}
+            className={"mar-r-md"}
+            onSelected={(audioState) => {
+              setMediaState({ ...mediaState, audio: audioState });
+            }}
+          ></IconButton>
+          <IconButton
+            default={!mediaState?.video}
+            icon={videoIcon}
+            iconSeleted={videoIconSelected}
+            className={""}
+            onSelected={(videoState) => {
+              setMediaState({ ...mediaState, video: videoState });
+            }}
+          ></IconButton>
         </div>
       </div>
     </>

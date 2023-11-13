@@ -82,25 +82,22 @@ export default function Peervideo() {
             navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia;
           let call = undefined;
-          if (mediaState.audio || mediaState.video) {
-            getUserMedia(mediaState, (mediaStream) => {
-              call = currentPeer.current.call(peeId.data, mediaStream);
-              callRef.current = call;
-              setRemotePeerIdValue(call.peer);
-              valueRef.current = call.peer;
-              call.on("stream", (remoteStream) => {
-                incommingVideo.current.srcObject = remoteStream;
-              });
-            });
-          } else {
-            call = currentPeer.current.call(peeId.data, new MediaStream());
+          getUserMedia({ video: true, audio: true }, (mediaStream) => {
+            call = currentPeer.current.call(peeId.data, mediaStream);
             callRef.current = call;
             setRemotePeerIdValue(call.peer);
             valueRef.current = call.peer;
             call.on("stream", (remoteStream) => {
               incommingVideo.current.srcObject = remoteStream;
             });
-          }
+            const senders = call.peerConnection.getSenders();
+            if (!mediaState.audio) {
+              senders?.[0]?.replaceTrack(undefined);
+            }
+            if (!mediaState.video) {
+              senders?.[1]?.replaceTrack(undefined);
+            }
+          });
         }
       });
     });
@@ -111,13 +108,22 @@ export default function Peervideo() {
         navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia;
       callRef.current = call;
-      if (mediaState.audio || mediaState.video) {
-        getUserMedia(mediaState, (mediaStream) => {
+      getUserMedia(
+        {
+          audio: true,
+          video: true,
+        },
+        (mediaStream) => {
           call.answer(mediaStream);
-        });
-      } else {
-        call.answer(new MediaStream());
-      }
+          const senders = call.peerConnection.getSenders();
+          if (!mediaState.audio) {
+            senders?.[0]?.replaceTrack(undefined);
+          }
+          if (!mediaState.video) {
+            senders?.[1]?.replaceTrack(undefined);
+          }
+        }
+      );
       setRemotePeerIdValue(call.peer);
       valueRef.current = call.peer;
       call.on("stream", (remoteStream) => {
@@ -138,9 +144,6 @@ export default function Peervideo() {
       if (mediaState.audio || mediaState.video) {
         getUserMedia(mediaState, (stream) => {
           const senders = callSate.peerConnection.getSenders();
-          if (senders.length == 0) {
-            senders;
-          }
           senders?.[0]?.replaceTrack(stream?.getAudioTracks()[0]);
           senders?.[1]?.replaceTrack(stream?.getVideoTracks()[0]);
         });

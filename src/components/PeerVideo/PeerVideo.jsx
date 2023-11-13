@@ -81,15 +81,26 @@ export default function Peervideo() {
             navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia;
-          getUserMedia(mediaState, (mediaStream) => {
-            const call = currentPeer.current.call(peeId.data, mediaStream);
+          let call = undefined;
+          if (mediaState.audio || mediaState.video) {
+            getUserMedia(mediaState, (mediaStream) => {
+              call = currentPeer.current.call(peeId.data, mediaStream);
+              callRef.current = call;
+              setRemotePeerIdValue(call.peer);
+              valueRef.current = call.peer;
+              call.on("stream", (remoteStream) => {
+                incommingVideo.current.srcObject = remoteStream;
+              });
+            });
+          } else {
+            call = currentPeer.current.call(peeId.data, new MediaStream());
             callRef.current = call;
             setRemotePeerIdValue(call.peer);
             valueRef.current = call.peer;
             call.on("stream", (remoteStream) => {
               incommingVideo.current.srcObject = remoteStream;
             });
-          });
+          }
         }
       });
     });
@@ -100,13 +111,17 @@ export default function Peervideo() {
         navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia;
       callRef.current = call;
-      getUserMedia(mediaState, (mediaStream) => {
-        call.answer(mediaStream);
-        setRemotePeerIdValue(call.peer);
-        valueRef.current = call.peer;
-        call.on("stream", (remoteStream) => {
-          incommingVideo.current.srcObject = remoteStream;
+      if (mediaState.audio || mediaState.video) {
+        getUserMedia(mediaState, (mediaStream) => {
+          call.answer(mediaStream);
         });
+      } else {
+        call.answer(new MediaStream());
+      }
+      setRemotePeerIdValue(call.peer);
+      valueRef.current = call.peer;
+      call.on("stream", (remoteStream) => {
+        incommingVideo.current.srcObject = remoteStream;
       });
     });
 
@@ -116,27 +131,33 @@ export default function Peervideo() {
   useEffect(() => {
     if (callRef.current) {
       let callSate = callRef.current;
-      getUserMedia(mediaState, (stream) => {
-        callSate.peerConnection.getSenders().forEach((sender) => {
-          if (
-            sender.track.kind === "audio" &&
-            stream.getAudioTracks().length > 0
-          ) {
-            sender.replaceTrack(stream.getAudioTracks()[0]);
+      var getUserMedia =
+        navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia;
+      if (mediaState.audio || mediaState.video) {
+        getUserMedia(mediaState, (stream) => {
+          const senders = callSate.peerConnection.getSenders();
+          if (senders.length == 0) {
+            senders;
           }
-          if (
-            sender.track.kind === "video" &&
-            stream.getVideoTracks().length > 0
-          ) {
-            sender.replaceTrack(stream.getVideoTracks()[0]);
-          }
+          senders?.[0]?.replaceTrack(stream?.getAudioTracks()[0]);
+          senders?.[1]?.replaceTrack(stream?.getVideoTracks()[0]);
         });
-      });
+      } else {
+        const senders = callSate.peerConnection.getSenders();
+        senders?.[0]?.replaceTrack(undefined);
+        senders?.[1]?.replaceTrack(undefined);
+      }
     }
   }, [mediaState]);
 
   const hasRemote = () => {
     return valueRef.current.length > 0;
+  };
+
+  const hasVideo = (ref) => {
+    return true;
   };
 
   return (
@@ -150,14 +171,17 @@ export default function Peervideo() {
             !hasRemote() ? styles.hidden : styles.MainVideo
           } radius-lg overflow-hidden `}
         >
-          <video
-            height={"100%"}
-            width={"100%"}
-            autoPlay
-            muted
-            className="box-shadow4"
-            ref={incommingVideo}
-          ></video>
+          {hasVideo(incommingVideo) ? (
+            <video
+              height={"100%"}
+              width={"100%"}
+              autoPlay
+              className="box-shadow4"
+              ref={incommingVideo}
+            ></video>
+          ) : (
+            <div>No Cam</div>
+          )}
         </div>
         <div
           id="outgoingMain"

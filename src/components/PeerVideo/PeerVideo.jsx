@@ -23,7 +23,6 @@ export default function Peervideo() {
   const [peerId, setPeerId] = useState(null);
   const [remotePeerIdValue, setRemotePeerIdValue] = useState("");
 
-  const meetId = useRef(null);
 
   const incommingVideo = useRef(null);
   const outgoingVideoRef = useRef(null);
@@ -33,7 +32,6 @@ export default function Peervideo() {
 
   const currentPeer = useRef(null);
 
-  const params = new URL(window.location.href).searchParams;
 
   const callRef = useRef(null);
 
@@ -42,6 +40,8 @@ export default function Peervideo() {
   });
 
   const context = useContext(PeerContext);
+
+  const meetId = context?.data?.meetId;
 
   const mediaState = useMemo(() => {
     return context?.data?.mediaState;
@@ -66,12 +66,11 @@ export default function Peervideo() {
 
   useEffect(() => {
     let peer = new Peer();
-    let meetId = params.get("id");
 
     peer.on("open", (id) => {
       setPeerId(id);
 
-      if (params.get("id") != undefined) {
+      if (meetId != undefined) {
         socket.emit("join", { roomid: meetId, peerid: id });
       }
 

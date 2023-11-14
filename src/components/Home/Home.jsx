@@ -7,6 +7,7 @@ import {
 } from "../../constants";
 import styles from "./Home.module.css";
 import { PeerContext } from "../../Context";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function Home(props) {
   const videRef = useRef(null);
@@ -16,7 +17,23 @@ export default function Home(props) {
     audio: true,
   });
 
+  const params = useParams();
+
+  const navigate = useNavigate();
+
   const context = useContext(PeerContext);
+
+  const meetId = context?.data?.meetId;
+
+  const [idState, setIdState] = useState(meetId);
+
+  useEffect(() => {
+    setIdState(meetId);
+  }, [meetId]);
+
+  useEffect(() => {
+    context?.setData({ ...context?.data, meetId: params["id"] });
+  }, []);
 
   useEffect(() => {
     if (mediaState?.audio || mediaState.video) {
@@ -27,9 +44,18 @@ export default function Home(props) {
   }, [mediaState]);
 
   const onJoinMeeting = (e) => {
-    props?.setStart(true);
     const data = context?.data;
-    context?.setData({ ...data, mediaState });
+    if (idState && idState?.length > 0) {
+      props?.setStart(true);
+      context?.setData({
+        ...data,
+        mediaState,
+        meetId: meetId ?? idState,
+      });
+      if (!params["id"]) {
+        navigate(idState);
+      }
+    }
   };
 
   return (
@@ -64,14 +90,28 @@ export default function Home(props) {
               icon={videoIcon}
               iconSeleted={videoIconSelected}
               className={""}
-                            onSelected={(videoState) => {
+              onSelected={(videoState) => {
                 setMediaState({ ...mediaState, video: videoState });
               }}
             ></IconButton>
           </div>
         </div>
-        <div className="flex flex-1 flex-column flex-centered pad-r-md">
-          <button onClick={(e) => onJoinMeeting(e)} className="btn-primary">
+        <div className="flex flex-1 flex-column pad-r-lg">
+          {(!meetId || meetId?.length < 1) && (
+            <div className="pad-b-lg">
+              <input
+                className="textfield"
+                placeholder="Enter Meeting ID"
+                minLength={4}
+                onChange={(e) => setIdState(e?.target?.value)}
+              ></input>
+            </div>
+          )}
+          <button
+            onClick={(e) => onJoinMeeting(e)}
+            className="btn-primary"
+            disabled={!idState || idState?.length < 1}
+          >
             <div className="text-base ">Join the meeting</div>
           </button>
         </div>

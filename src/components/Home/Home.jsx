@@ -72,6 +72,7 @@ export default function Home(props) {
                 ref={videRef}
                 muted
                 autoPlay
+                playsInline
               ></video>
             ) : (
               "Camera is Off"

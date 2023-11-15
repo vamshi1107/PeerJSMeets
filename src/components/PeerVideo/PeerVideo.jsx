@@ -23,7 +23,6 @@ export default function Peervideo() {
   const [peerId, setPeerId] = useState(null);
   const [remotePeerIdValue, setRemotePeerIdValue] = useState("");
 
-
   const incommingVideo = useRef(null);
   const outgoingVideoRef = useRef(null);
   const outgoingMainVideoRef = useRef(null);
@@ -31,7 +30,6 @@ export default function Peervideo() {
   const valueRef = useRef("");
 
   const currentPeer = useRef(null);
-
 
   const callRef = useRef(null);
 
@@ -180,6 +178,7 @@ export default function Peervideo() {
               autoPlay
               className="box-shadow4"
               ref={incommingVideo}
+              playsInline
             ></video>
           ) : (
             <div>No Cam</div>
@@ -198,6 +197,7 @@ export default function Peervideo() {
             muted
             autoPlay
             ref={outgoingMainVideoRef}
+            playsInline
           ></video>
         </div>
 
@@ -215,6 +215,7 @@ export default function Peervideo() {
               autoPlay
               className="box-shadow4"
               ref={outgoingVideoRef}
+              playsInline
             ></video>
           </div>
         </div>
